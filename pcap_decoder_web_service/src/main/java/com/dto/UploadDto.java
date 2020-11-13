@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder
 public class UploadDto {
 
     String id;
@@ -21,5 +20,9 @@ public class UploadDto {
         this.description = uploads.getDescription();
         this.timestamp = uploads.getTimestamp();
         this.status = "OK";
+    }
+
+    public UploadDto(String status) {
+        this.status = status;
     }
 }

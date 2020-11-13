@@ -2,6 +2,7 @@ package com.controller;
 
 import java.util.List;
 
+import com.dto.SessionDto;
 import com.dto.UploadResponsePage;
 import com.service.UploadService;
 import com.dto.UploadDto;
@@ -33,14 +34,23 @@ public class InternalApi {
     }
 
     @RequestMapping(value = "/list-uploads", produces = "application/json", method = RequestMethod.GET)
-    public UploadResponsePage listUploads(@RequestParam(name = "page") int page, @RequestParam(name = "pageSize") int pageSize) {
+    public UploadResponsePage listUploads(@RequestParam(name = "page", defaultValue = "0", required = false) int page,
+                                          @RequestParam(name = "pageSize", defaultValue = "15", required = false) int pageSize) {
         return uploadService.listUploads(page, pageSize);
     }
 
-    @RequestMapping(value = "view-sessions", produces = "application/json", method = RequestMethod.GET)
+    @RequestMapping(value = "list-sessions", produces = "application/json", method = RequestMethod.GET)
     public UploadResponsePage viewSessions(@RequestParam(name = "upload_id") String uploadId,
-                        @RequestParam(name = "page") int page,
-                        @RequestParam(name = "pageSize") int pageSize) {
+                        @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+                        @RequestParam(name = "pageSize", defaultValue = "15", required = false) int pageSize) {
         return uploadService.viewSessions(uploadId,page,pageSize);
+    }
+
+    @RequestMapping(value = "session-details", produces = "application/json", method = RequestMethod.GET)
+    public SessionDto sessionDetails(@RequestParam(name = "session_id") String sessionId,
+                                     @RequestParam(name = "src_payload", required = false, defaultValue = "false") boolean srcPayload,
+                                     @RequestParam(name = "dst_payload", required = false, defaultValue = "false") boolean dstPayload,
+                                     @RequestParam(name = "payload", required = false, defaultValue = "false") boolean payload) {
+        return uploadService.sessionDetails(sessionId,srcPayload,dstPayload,payload);
     }
 }

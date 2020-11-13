@@ -1,7 +1,10 @@
 package com.service;
 
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,6 +42,16 @@ public class UploadService {
     @Autowired
     private PacketRepository packetRepository;
 
+    public SessionDto sessionDetails(String sessionId, boolean srcPayload, boolean dstPayload, boolean payload) {
+        SessionRecord record = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
+        SessionDto preparedDto = new SessionDto(record);
+        List<IpTcpRecord> packets = packetRepository.findAllBySessionIdOrderByTimestamp(sessionId);
+        StringBuilder sessionPayload = new StringBuilder();
+        packets.stream().forEach(packet -> sessionPayload.append(packet.getPayload()));
+         preparedDto.setPayload(new String(Base64.getDecoder().decode(sessionPayload.toString())));
+         return preparedDto;
+    }
+
     public UploadResponsePage viewSessions(String uploadId, int page, int size) {
         Page<SessionRecord> sessions = sessionRepository.findAllByUploadIdOrderByTimestamp(uploadId, PageRequest.of(page, size));
         List<SessionDto> sessionDtos = sessions.get().map(SessionDto::new).collect(Collectors.toList());
@@ -58,9 +71,9 @@ public class UploadService {
             persist(tcpProtocolDecoder);
         } catch (Exception e) {
             e.printStackTrace();
-            return UploadDto.builder().status("ERROR").build();
+            return new UploadDto("ERROR");
         }
-        return UploadDto.builder().status("STARTED").build();
+        return new UploadDto("STARTED");
     }
 
     public void persist(TcpProtocolDecoder decoder) {
@@ -73,13 +86,13 @@ public class UploadService {
 
     public void persistSession(String uploadId, TcpSession session) {
         String sessionId = UUID.randomUUID().toString();
-        SessionRecord sessionRecord = new SessionRecord(sessionId,uploadId,session);
+        SessionRecord sessionRecord = SessionRecord.initial(sessionId, uploadId).withSession(session);
         sessionRepository.save(sessionRecord);
         session.getPacketQueue().stream().forEach(packet -> persistPacket(sessionId, packet));
     }
 
     public void persistPacket(String sessionId, IpTcpEntity packet) {
-        IpTcpRecord packetRecord = new IpTcpRecord(UUID.randomUUID().toString(), sessionId, packet);
+        IpTcpRecord packetRecord = IpTcpRecord.initial(UUID.randomUUID().toString(), sessionId).withPacket(packet);
         packetRepository.save(packetRecord);
     }
 }

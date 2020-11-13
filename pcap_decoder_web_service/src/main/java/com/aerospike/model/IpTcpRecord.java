@@ -4,12 +4,14 @@ import java.net.InetAddress;
 import java.time.LocalDateTime;
 
 import com.sicknet.protocol.tcp.model.IpTcpEntity;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import org.springframework.data.aerospike.mapping.Document;
 import org.springframework.data.annotation.Id;
 
 @Value
+@Builder(toBuilder = true)
 @Document(collection = "TCP_PACKETS")
 public class IpTcpRecord {
 
@@ -37,23 +39,26 @@ public class IpTcpRecord {
     private String payload;
     private int payloadLen;
 
-    public IpTcpRecord(String id, String sessionId, IpTcpEntity packet) {
-        this.id = id;
-        this.sessionId = sessionId;
-        this.srcAddr = packet.getSrcAddr().getHostAddress();
-        this.dstAddr = packet.getDstAddr().getHostAddress();
-        this.srcPort = packet.getSrcPort();
-        this.dstPort = packet.getDstPort();
-        this.seq = packet.getSeq();
-        this.ack = packet.getAck();
-        this.SYN = packet.isSYN();
-        this.ACK0 = packet.isACK0();
-        this.URG = packet.isURG();
-        this.PSH = packet.isPSH();
-        this.FIN = packet.isFIN();
-        this.RST = packet.isRST();
-        this.timestamp = packet.getTimestamp();
-        this.payloadLen = packet.getPayloadLen();
-        this.payload = packet.getPayload();
+    public IpTcpRecord withPacket(IpTcpEntity packet) {
+        return toBuilder()
+        .srcAddr(packet.getSrcAddr().getHostAddress())
+        .dstAddr(packet.getDstAddr().getHostAddress())
+        .srcPort(packet.getSrcPort())
+        .dstPort(packet.getDstPort())
+        .seq(packet.getSeq())
+        .ack(packet.getAck())
+        .SYN(packet.isSYN())
+        .ACK0(packet.isACK0())
+        .URG(packet.isURG())
+        .PSH(packet.isPSH())
+        .FIN(packet.isFIN())
+        .RST(packet.isRST())
+        .timestamp(packet.getTimestamp())
+        .payloadLen(packet.getPayloadLen())
+        .payload(packet.getPayload()).build();
+    }
+
+    public static IpTcpRecord initial(String id, String sessionId) {
+        return new IpTcpRecord(id,sessionId,null,null,0,0,0,0,false,false,false,false,false,false,null,null,0);
     }
 }
